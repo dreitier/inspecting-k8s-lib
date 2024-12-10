@@ -22,9 +22,8 @@
     ],
     "require": {
         "php": "^8.1",
-        "composer/semver": "3.3.2",
-        "maclof/kubernetes-client": "^0.27.0",
-        "nunomaduro/termwind": "^1.15.1",
+        "composer/semver": "^3.4.3",
+        "maclof/kubernetes-client": "^0.31.0",
         "php-http/guzzle7-adapter": "^1.0",
         "php-http/message": "^1.16",
         "php-http/message-factory": "^1.1"
