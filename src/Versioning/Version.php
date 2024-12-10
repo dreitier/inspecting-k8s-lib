@@ -8,8 +8,8 @@ use Composer\Semver\VersionParser;
 class Version
 {
     public function __construct(
-        public readonly string $raw,
-        public readonly string $version,
+        public readonly string  $raw,
+        public readonly string  $version,
         public readonly ?string $flavor = null,
     )
     {
@@ -57,8 +57,15 @@ class Version
         if ($version) {
             if (preg_match('/^(?<version>([^\-]*))(\-(?<flavor>(.*)))?$/', $r['raw'], $ret)) {
                 $r['version'] = $ret['version'];
+                if (!preg_match("/.*\..*/", $r['version'])) {
+                    $r['version'] = '0.0.0';
+                }
+
+                // remove any characters at the beginning, like v0.1.x
+                $r['version'] = preg_replace('/^[a-zA-Z]+/', '', $r['version']);
                 // remove any characters and replace it with a single zero digit. There maybe some versions like 15.x.x
                 $r['version'] = preg_replace('/[a-zA-Z]+/', '0', $r['version']);
+
                 $r['flavor'] = $ret['flavor'] ?? null;
             }
         }

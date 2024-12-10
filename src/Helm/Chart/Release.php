@@ -200,4 +200,34 @@ class Release
             raw: $content,
         );
     }
+
+
+    public static function ofKubernetesSpec(array $spec): Release {
+        $applicationReference = new ArtifactReference(
+            name: $spec['name'],
+            version: Version::of($spec['appVersion'] ?? $spec['version']),
+            sourceArtifact: new Artifact('exe'),
+        );
+
+        return new Release(
+            chartVersion:Version::of($spec['version']),
+            application: $applicationReference,
+            raw: $spec
+        );
+    }
+
+    public static function fromArray(array $args): Release {
+        return new Release(
+            chartVersion: Version::of($args['version']),
+            application: ArtifactReference::fromArray($args['application']),
+        );
+    }
+
+    public function toArray(): array {
+        return [
+            'version' => (string)$this->chartVersion,
+            'application' => $this->application->toArray(),
+        ];
+    }
+
 }

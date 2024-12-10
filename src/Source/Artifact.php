@@ -2,7 +2,7 @@
 
 namespace Dreitier\Alm\Inspecting\Source;
 
-use Dreitier\Alm\Versioning\Version;
+use Dreitier\Alm\Inspecting\Versioning\Version;
 
 class Artifact
 {
@@ -16,5 +16,17 @@ class Artifact
         public readonly ?Version $version = null,
     )
     {
+    }
+
+    public function toArray(): array {
+        return [
+            'type' => $this->type,
+        ];
+    }
+
+    public static function fromArray(array $array): Artifact {
+        return new static(
+            type: $array['type'],
+        );
     }
 }

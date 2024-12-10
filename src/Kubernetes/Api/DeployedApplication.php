@@ -1,13 +1,14 @@
 <?php
 namespace Dreitier\Alm\Inspecting\Kubernetes\Api;
 
+use Dreitier\Alm\Inspecting\Helm\Chart\Release;
 use Dreitier\Alm\Inspecting\Helm\Chart\ReleaseSummary;
 
 class DeployedApplication {
 	public function __construct(
 		public readonly string         $ns,
 		public readonly string         $deploymentName,
-		public readonly ReleaseSummary $helmChartRelease,
+		public readonly Release $helmChartRelease,
 		public readonly array          $sources)
 	{
 	}
@@ -35,7 +36,7 @@ class DeployedApplication {
 		return new static(
 			ns: $args['namespace'],
 			deploymentName: $args['deployment'],
-			helmChartRelease: ReleaseSummary::fromArray($args['helmChartRelease']),
+			helmChartRelease: Release::fromArray($args['helmChartRelease']),
 			sources: $args['sources'] ?? []
 		);
 	}
