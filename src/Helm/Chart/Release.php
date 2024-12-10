@@ -2,9 +2,9 @@
 
 namespace Dreitier\Alm\Inspecting\Helm\Chart;
 
-use Dreitier\Alm\Source\Artifact;
-use Dreitier\Alm\Source\ArtifactReference;
-use Dreitier\Alm\Versioning\Version;
+use Dreitier\Alm\Inspecting\Source\Artifact;
+use Dreitier\Alm\Inspecting\Source\ArtifactReference;
+use Dreitier\Alm\Inspecting\Versioning\Version;
 
 /**
  * Encapsulates a Helm chart release from artifacthub.io.

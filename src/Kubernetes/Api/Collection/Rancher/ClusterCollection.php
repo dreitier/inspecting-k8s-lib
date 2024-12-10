@@ -1,7 +1,7 @@
 <?php
 namespace Dreitier\Alm\Inspecting\Kubernetes\Api\Collection\Rancher;
-use Dreitier\Alm\Kubernetes\Api\Model\App;
-use Dreitier\Alm\Kubernetes\Api\Model\Rancher\Cluster;
+use Dreitier\Alm\Inspecting\Kubernetes\Api\Model\App;
+use Dreitier\Alm\Inspecting\Kubernetes\Api\Model\Rancher\Cluster;
 use Maclof\Kubernetes\Collections\Collection;
 
 class ClusterCollection extends Collection

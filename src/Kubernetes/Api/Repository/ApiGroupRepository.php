@@ -1,8 +1,7 @@
 <?php
 namespace Dreitier\Alm\Inspecting\Kubernetes\Api\Repository;
 
-use Dreitier\Alm\Kubernetes\Api\Collection\ApiGroupCollection;
-use Dreitier\Alm\Kubernetes\Api\Collection\AppCollection;
+use Dreitier\Alm\Inspecting\Kubernetes\Api\Collection\ApiGroupCollection;
 use Maclof\Kubernetes\Repositories\Repository;
 
 class ApiGroupRepository extends Repository {

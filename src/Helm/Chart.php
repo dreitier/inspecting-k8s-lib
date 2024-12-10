@@ -2,10 +2,9 @@
 
 namespace Dreitier\Alm\Inspecting\Helm;
 
-use Composer\Semver\VersionParser;
 use Composer\Semver\Comparator;
-use Dreitier\Alm\Helm\Chart\ReleaseSummary as HelmChartRelease;
-use Dreitier\Alm\Versioning\Version;
+use Dreitier\Alm\Inspecting\Helm\Chart\ReleaseSummary as HelmChartRelease;
+use Dreitier\Alm\Inspecting\Versioning\Version;
 
 class Chart
 {

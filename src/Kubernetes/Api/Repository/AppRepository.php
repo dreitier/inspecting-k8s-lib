@@ -1,7 +1,7 @@
 <?php
 namespace Dreitier\Alm\Inspecting\Kubernetes\Api\Repository;
 
-use Dreitier\Alm\Kubernetes\Api\Collection\AppCollection;
+use Dreitier\Alm\Inspecting\Kubernetes\Api\Collection\AppCollection;
 use Maclof\Kubernetes\Repositories\Repository;
 
 class AppRepository extends Repository {

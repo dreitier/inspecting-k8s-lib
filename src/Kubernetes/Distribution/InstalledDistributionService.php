@@ -2,6 +2,7 @@
 
 namespace Dreitier\Alm\Inspecting\Kubernetes\Distribution;
 
+use Dreitier\Alm\Inspecting\Kubernetes\ClientContext;
 use Dreitier\Alm\Inspecting\Kubernetes\Distribution\Rancher\Release;
 use Dreitier\Alm\Inspecting\Versioning\Version;
 use Maclof\Kubernetes\Client;
@@ -9,7 +10,7 @@ use Maclof\Kubernetes\RepositoryRegistry;
 
 class InstalledDistributionService
 {
-    public function __construct(public readonly Credential $credential)
+    public function __construct(public readonly ClientContext $client)
     {
     }
 
@@ -21,13 +22,8 @@ class InstalledDistributionService
     protected function detectRke1(): array
     {
         $r = [];
-        $client = new Client([
-            'master' => $this->credential->endpoint,
-            'token' => $this->credential->token,
-            'namespace' => 'cattle-system'
-        ], new RepositoryRegistry());
 
-        $deployments = $client->deployments()->find();
+        $deployments = $this->client->deployments()->find();
 
         foreach ($deployments as $deployment) {
             $deployment = $deployment->toArray();
