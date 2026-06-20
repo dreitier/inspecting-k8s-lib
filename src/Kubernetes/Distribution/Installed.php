@@ -2,7 +2,7 @@
 
 namespace Dreitier\Alm\Inspecting\Kubernetes\Distribution;
 
-use Dreitier\Alm\Inspecting\Versioning\Version;
+use Dreitier\Alm\Inspecting\Versioning\VersionDeprecated;
 use Dreitier\Alm\Inspecting\Versioning\Versionized;
 
 class Installed implements Versionized
@@ -24,7 +24,7 @@ class Installed implements Versionized
         return new static(Type::RANCHER_RKE2, $version);
     }
 
-    public function getVersion(): Version
+    public function getVersion(): VersionDeprecated
     {
         return $this->distribution->getVersion();
     }

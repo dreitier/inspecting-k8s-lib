@@ -7,109 +7,157 @@ use Composer\Semver\VersionParser;
 
 class Version
 {
-    public function __construct(
-        public readonly string  $raw,
-        public readonly string  $version,
-        public readonly ?string $flavor = null,
-    )
-    {
-    }
+	private function __construct(
+		public readonly string  $raw,
+		public readonly int     $major = 0,
+		public readonly int     $minor = 0,
+		public readonly int     $patch = 0,
+		public readonly int     $buildnumber = 0,
+		public readonly ?string $flavor = null,
+	)
+	{
+	}
 
-    public static function nullableOf(?string $version): ?Version
-    {
-        if ($version) {
-            return static::of($version);
-        }
+	public static function nullableOf(?string $version): ?Version
+	{
+		if ($version) {
+			return static::of($version);
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    public static function of(string $version): Version
-    {
-        $sanitized = static::sanitize($version);
-        $sanitized['version'] = (new VersionParser())->normalize($sanitized['version']);
+	public static function toVersion(Version|Versionized $version): Version
+	{
+		if ($version instanceof Version) {
+			return $version;
+		}
 
-        return new static(...$sanitized);
-    }
+		return $version->getVersion();
+	}
 
-    public static function comparableOf(?string $version = null): ?ConstraintInterface
-    {
-        $sanitized = static::sanitize($version);
+	public static function of(string $version): Version
+	{
+		$regex = '/^(?<prelude>[a-zA-Z]*)(?<major>0|[1-9]\d*)(\.(?<minor>0|[1-9]\d*)(\.(?<patch>0|[1-9]\d*)(\.(?<buildnumber>0|[1-9]\d*))?)?)?(-(?<prerelease>[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(\+(?<build>[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/';
 
-        if (isset($sanitized['version'])) {
-            return (new Version(... $sanitized))->comparable();
-        }
+		if (preg_match($regex, $version, $matches)) {
+			$args = [
+				'raw' => $version,
+				'major' => (int)$matches['major'],
+			];
 
-        return null;
-    }
+			if (isset($matches['minor'])) {
+				$args['minor'] = (int)$matches['minor'];
+			}
 
-    /**
-     * Removes any train (like "-distributed" in "0.1.3-distributed") from the version constraint.
-     * This has been the case for <em>loki:5.41.9-distributed</em>
-     *
-     * @param string|null $versionConstraint
-     * @return array
-     */
-    public static function sanitize(?string $version = null): array
-    {
-        $r = ['raw' => $version, 'version' => null, 'flavor' => null];
+			if (isset($matches['patch'])) {
+				$args['patch'] = (int)$matches['patch'];
+			}
 
-        if ($version) {
-            if (preg_match('/^(?<version>([^\-]*))(\-(?<flavor>(.*)))?$/', $r['raw'], $ret)) {
-                $r['version'] = $ret['version'];
-                if (!preg_match("/.*\..*/", $r['version'])) {
-                    $r['version'] = '0.0.0';
-                }
+			if (isset($matches['buildnumber'])) {
+				$args['buildnumber'] = (int)$matches['buildnumber'];
+			}
 
-                // remove any characters at the beginning, like v0.1.x
-                $r['version'] = preg_replace('/^[a-zA-Z]+/', '', $r['version']);
-                // remove any characters and replace it with a single zero digit. There maybe some versions like 15.x.x
-                $r['version'] = preg_replace('/[a-zA-Z]+/', '0', $r['version']);
+			if (isset($matches['prerelease'])) {
+				$args['flavor'] = $matches['prerelease'];
+			}
 
-                $r['flavor'] = $ret['flavor'] ?? null;
-            }
-        }
+			if (isset($matches['build'])) {
+				$args['flavor'] = $matches['build'];
+			}
 
-        return $r;
-    }
+			return new Version(...$args);
+		}
 
-    public function comparable(): ConstraintInterface
-    {
-        return (new VersionParser())->parseConstraints($this->version);
-    }
+		throw new \Exception("Could not parse version string '$version'");
+	}
 
-    public function parts(): array
-    {
-        return explode(".", $this->version);
-    }
+	public function compare(Version|Versionized $version, bool $includeFlavorCheck = false): int
+	{
+		$version = static::toVersion($version);
 
-    private function toVersion(array $parts): Version
-    {
-        return Version::of(implode(".", $parts));
-    }
+		if (0 !== ($result = $this->_compare($this->major, $version->major))) {
+			return $result;
+		}
 
-    public function nextMinor(): Version
-    {
-        $parts = $this->parts();
+		if (0 !== ($result = $this->_compare($this->minor, $version->minor))) {
+			return $result;
+		}
 
-        return $this->toVersion([$parts[0], $parts[1] + 1, 0, 0]);
-    }
+		if (0 !== ($result = $this->_compare($this->patch, $version->patch))) {
+			return $result;
+		}
 
-    public function nextPatch(): Version
-    {
-        $parts = $this->parts();
+		if (0 !== ($result = $this->_compare($this->buildnumber, $version->buildnumber))) {
+			return $result;
+		}
 
-        return $this->toVersion([$parts[0], $parts[1], $parts[2] + 1, 0]);
-    }
+		if ($includeFlavorCheck) {
+			if ($this->flavor !== null) {
+				return $this->flavorAsVersion()->compare($version);
+			}
+		}
 
-    public function nextMajor(): Version
-    {
-        $parts = $this->parts();
-        return $this->toVersion([$parts[0] + 1, 0, 0, 0]);
-    }
+		return 0;
+	}
 
-    public function __toString()
-    {
-        return $this->version;
-    }
+	private function _compare(int $left, int $right): int
+	{
+		if ($left > $right) {
+			return 1;
+		}
+
+		if ($left < $right) {
+			return -1;
+		}
+
+		return 0;
+	}
+
+	/**
+	 * True if *this* version is higher (newer, after) than the other
+	 * @param Version|Versionized $version
+	 * @return bool
+	 */
+	public function isHigherThan(Version|Versionized $version): bool
+	{
+		return $this->compare(static::toVersion($version)) >= 1;
+	}
+
+	public function isEqual(Version|Versionized  $version): bool
+	{
+		return $this->compare(static::toVersion($version), true) == 0;
+	}
+
+	/**
+	 * True if *this* version is lower (older, before) than the other
+	 * @param Version|Versionized $version
+	 * @return bool
+	 */
+	public function isLowerThan(Version|Versionized $version): bool
+	{
+		return $this->compare(static::toVersion($version)) <= -1;
+	}
+
+	public function main(bool $withBuildnumber = false): string
+	{
+		$r = $this->major . '.' . $this->minor . '.' . $this->patch;
+		if ($withBuildnumber) {
+			$r .= '.' . $this->buildnumber;
+		}
+
+		return $r;
+	}
+
+	public function flavorAsVersion(): ?Version {
+		if ($this->flavor) {
+			return Version::of($this->flavor);
+		}
+		return null;
+	}
+
+	public function __toString()
+	{
+		return $this->raw;
+	}
 }

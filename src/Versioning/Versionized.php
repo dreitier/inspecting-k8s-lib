@@ -2,7 +2,6 @@
 
 namespace Dreitier\Alm\Inspecting\Versioning;
 
-use Composer\Semver\VersionParser;
 
 interface Versionized
 {

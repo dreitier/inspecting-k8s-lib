@@ -1,33 +1,41 @@
 <?php
+
 namespace Dreitier\Alm\Inspecting\Kubernetes\Api;
 
-use Dreitier\Alm\Inspecting\Helm\Chart\Release;
+use Dreitier\Alm\Inspecting\Helm\Chart\ReleaseDeprecated;
 use Dreitier\Alm\Inspecting\Helm\Chart\ReleaseSummary;
+use Dreitier\Alm\Inspecting\Helm\Domain\Model\Release;
+use Dreitier\Alm\Inspecting\Helm\Infrastructure\Artifacthub\ArtifacthubReleaseResponse;
+use Dreitier\Alm\Inspecting\Source\ArtifactReference;
+use Dreitier\Alm\Inspecting\Versioning\Version;
 
-class DeployedApplication {
+class DeployedApplication
+{
 	public function __construct(
-		public readonly string         $ns,
-		public readonly string         $deploymentName,
-		public readonly Release $helmChartRelease,
-		public readonly array          $sources)
+		public readonly string             $ns,
+		public readonly string             $deploymentName,
+		public readonly ?DeployedHelmChart $deployedHelmChart,
+		public readonly array              $sources)
 	{
 	}
 
-	public function __toString(): string {
+	public function __toString(): string
+	{
 		return $this->ns
 			. ":"
 			. $this->deploymentName
 			. " (Chart: "
-				. $this->helmChartRelease->version
-				. ", App: " . $this->helmChartRelease->application?->version
+			. $this->deployedHelmChart->version
+			. ", App: " . $this->deployedHelmChart->application->version
 			. ")";
 	}
 
-	public function toArray(): array {
+	public function toArray(): array
+	{
 		return [
 			'namespace' => $this->ns,
 			'deployment' => $this->deploymentName,
-			'helmChartRelease' => $this->helmChartRelease->toArray(),
+			'deployedHelmChart' => $this->deployedHelmChart->toArray(),
 			'sources' => $this->sources,
 		];
 	}
@@ -36,8 +44,9 @@ class DeployedApplication {
 		return new static(
 			ns: $args['namespace'],
 			deploymentName: $args['deployment'],
-			helmChartRelease: Release::fromArray($args['helmChartRelease']),
+			deployedHelmChart: DeployedHelmChart::fromArray($args['deployedHelmChart']),
 			sources: $args['sources'] ?? []
 		);
 	}
 }
+

@@ -5,8 +5,14 @@ namespace Dreitier\Alm\Inspecting\Kubernetes;
 use Dreitier\Alm\Inspecting\Kubernetes\Api\Repository\ApiGroupRepository;
 use Dreitier\Alm\Inspecting\Kubernetes\Api\Repository\AppRepository;
 use Dreitier\Alm\Inspecting\Kubernetes\Api\Repository\Rancher\ClusterRepository;
+use Dreitier\Alm\Inspecting\Kubernetes\Api\Repository\TokenRepository;
+use Dreitier\Alm\Inspecting\Log\StdoutLogger;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\MessageFormatter;
+use GuzzleHttp\Middleware;
 use Maclof\Kubernetes\Client;
 use Maclof\Kubernetes\RepositoryRegistry;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Yaml\Yaml;
 
 class ClientContextFactory
@@ -63,6 +69,7 @@ class ClientContextFactory
             'api_groups' => ApiGroupRepository::class,
             'apps' => AppRepository::class,
             'rancher_clusters' => ClusterRepository::class,
+            'tokens' => TokenRepository::class,
         ];
 
         $useRepositoriesToRegister = array_merge($customRepositories, $this->registerAdditionalRepositories);
@@ -74,11 +81,28 @@ class ClientContextFactory
         return $registry;
     }
 
+    /**
+     * Create a new client context from a given .kube/config file
+     *
+     * @param string|null $kubeConfigPath Path to .kube/config
+     * @param string|null $user
+     * @param string|null $cluster
+     * @param string|null $context
+     * @param array|null $guzzleHttpConfig custom Guzzle HTTP configuration flags
+     * @param HandlerStack|null $handlerStack if given, it sets the Guzzle HTTP log handler stack to that logging interface
+     * @param bool $enableDebug if enabled, the Guzzle HTTP log handler stack is automatically set to a StdoutLogger instance
+     * @return ClientContext
+     * @throws \Exception
+     */
     public function createFromKubeConfig(
-        ?string $kubeConfigPath = null,
-        ?string $user = null,
-        ?string $cluster = null,
-        ?string $context = null
+        ?string       $kubeConfigPath = null,
+        ?string       $user = null,
+        ?string       $cluster = null,
+        ?string       $context = null,
+        ?array        $guzzleHttpConfig = [],
+        ?HandlerStack $handlerStack = null,
+        bool          $enableDebug = false,
+
 
     ): ClientContext
     {
@@ -86,7 +110,7 @@ class ClientContextFactory
             throw new \Exception("parameter 'kube-config' not present");
         }
 
-        if (!File::exists($kubeConfigPath)) {
+        if (!file_exists($kubeConfigPath)) {
             throw new \Exception("kube.config file " . $kubeConfigPath . " does not exist");
         }
 
@@ -97,10 +121,20 @@ class ClientContextFactory
             $context
         );
 
+        $httpConfig = $guzzleHttpConfig ?? [];
+
+        if ($handlerStack !== null || $enableDebug === true) {
+            // use custom handler stack or create default handler stack
+            $useHandlerStack = $handlerStack ?? StdoutLogger::createHandlerstack();
+            $httpConfig['handler'] = $useHandlerStack;
+        }
+
         $client = new Client([
             'master' => $clusterContext->endpoint,
             'token' => $clusterContext->token,
-        ], $this->createRegistry());
+        ], $this->createRegistry(),
+            httpClient: \Http\Adapter\Guzzle7\Client::createWithConfig($httpConfig),
+        );
 
         return new ClientContext($clusterContext->clusterName, $clusterContext->endpoint, $client);
     }
@@ -161,3 +195,4 @@ class ClientContextFactory
         return $fallback;
     }
 }
+

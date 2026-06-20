@@ -4,12 +4,12 @@ namespace Dreitier\Alm\Inspecting\Kubernetes\Distribution\Rancher;
 
 use Composer\Semver\VersionParser;
 use Dreitier\Alm\Inspecting\Kubernetes\Distribution\Rancher\Release as RancherRelease;
-use Dreitier\Alm\Inspecting\Versioning\Version;
-use Dreitier\Alm\Inspecting\Versioning\VersionedCollection;
+use Dreitier\Alm\Inspecting\Versioning\VersionDeprecated;
+use Dreitier\Alm\Inspecting\Versioning\VersionedCollectionDeprecated;
 
 class RancherReleaseService
 {
-    public function findOfficialReleases(): VersionedCollection
+    public function findOfficialReleases(): VersionedCollectionDeprecated
     {
         $rancherReleaseDoc = file_get_contents("https://ranchermanager.docs.rancher.com/versions");
         $r = [];
@@ -17,7 +17,7 @@ class RancherReleaseService
         preg_match_all("/<tr><td><b>(?P<version>[a-z0-9\.]+)<\/b><\/td><td>(.*?)<\/td><td><a href=\"(?P<gh_tag_link>[^\"]*?)\".*?>.*?<\/a><\/td><td><a href=\"(?P<support_matrix>[^\"]*?)\"/", $rancherReleaseDoc, $match);
 
         foreach ($match[0] as $idx => $link) {
-            $release = Version::of($match['version'][$idx]);
+            $release = VersionDeprecated::of($match['version'][$idx]);
             $supportMatrix = $match['support_matrix'][$idx];
             $supportedMinorReleases = [];
 
@@ -32,7 +32,7 @@ class RancherReleaseService
 
                     foreach ($matchC['target'] as $idx2 => $distribution) {
                         if (strtolower(trim($distribution)) == 'any') {
-                            $supportedMinorReleases[] = Version::of($matchC['version'][$idx2]);
+                            $supportedMinorReleases[] = VersionDeprecated::of($matchC['version'][$idx2]);
                         }
                     }
                 }
@@ -42,12 +42,12 @@ class RancherReleaseService
                 version: $release,
                 changelog: $match['gh_tag_link'][$idx],
                 supportMatrix: $supportMatrix,
-                supportedLatestKubernetesMinorReleases: VersionedCollection::of($supportedMinorReleases),
+                supportedLatestKubernetesMinorReleases: VersionedCollectionDeprecated::of($supportedMinorReleases),
             );
 
             $r[] = $rancherRelease;
         }
 
-        return VersionedCollection::of($r);
+        return VersionedCollectionDeprecated::of($r);
     }
 }

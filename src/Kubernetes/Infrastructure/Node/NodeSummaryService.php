@@ -2,7 +2,7 @@
 
 namespace Dreitier\Alm\Inspecting\Kubernetes\Infrastructure\Node;
 
-use Dreitier\Alm\Inspecting\Versioning\Version;
+use Dreitier\Alm\Inspecting\Versioning\VersionDeprecated;
 use Maclof\Kubernetes\Client;
 
 class NodeSummaryService
@@ -28,7 +28,7 @@ class NodeSummaryService
                 internalIp: static::where($addresses, 'type', 'InternalIP', 'address'),
                 externalIp: static::where($addresses, 'type', 'ExternalIP', 'address'),
                 hostname: static::where($addresses, 'type', 'Hostname', 'address'),
-                kubeletVersion: Version::of($nodeInfo['kubeletVersion']),
+                kubeletVersion: VersionDeprecated::of($nodeInfo['kubeletVersion']),
                 containerRuntimeVersion: $nodeInfo['containerRuntimeVersion'],
                 osImage: $nodeInfo['osImage'] ?? null,
                 kernelVersion: $nodeInfo['kernelVersion'],

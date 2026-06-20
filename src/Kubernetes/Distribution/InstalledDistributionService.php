@@ -4,7 +4,7 @@ namespace Dreitier\Alm\Inspecting\Kubernetes\Distribution;
 
 use Dreitier\Alm\Inspecting\Kubernetes\ClientContext;
 use Dreitier\Alm\Inspecting\Kubernetes\Distribution\Rancher\Release;
-use Dreitier\Alm\Inspecting\Versioning\Version;
+use Dreitier\Alm\Inspecting\Versioning\VersionDeprecated;
 use Maclof\Kubernetes\Client;
 use Maclof\Kubernetes\RepositoryRegistry;
 
@@ -39,12 +39,12 @@ class InstalledDistributionService
         return $r;
     }
 
-    private static function locateRancherCattleVersion(array $template): ?Version
+    private static function locateRancherCattleVersion(array $template): ?VersionDeprecated
     {
         if (isset($template['spec']['containers'])) {
             foreach ($template['spec']['containers'] as $containerTemplate) {
                 if (preg_match('/^rancher\/rancher-agent:(.*)$/', $containerTemplate['image'], $r)) {
-                    return Version::of($r[1]);
+                    return VersionDeprecated::of($r[1]);
                 }
             }
         }
